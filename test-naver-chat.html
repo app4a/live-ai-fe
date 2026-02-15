@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로컬 네이버 채팅 테스트</title>
+    <style>
+      :root {
+        --brand: #00c73c;
+        --bg: #f4f6f8;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .layout {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+      }
+      .panel {
+        background: var(--card);
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .title {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .desc {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .field {
+        margin-top: 12px;
+        display: grid;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 12px;
+        color: #374151;
+      }
+      .field input, .field select, .field button {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+      .row {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .btn {
+        cursor: pointer;
+        border: 1px solid #16a34a;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+      }
+      .btn.secondary {
+        border-color: #d1d5db;
+        background: #fff;
+        color: #111827;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .chip {
+        cursor: pointer;
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      .ChattingWrapper_test {
+        background: #0d1117;
+        border-radius: 12px;
+        border: 1px solid #1f2937;
+        padding: 12px;
+      }
+      .CommentList_wrap_test {
+        height: 72vh;
+        overflow-y: auto;
+        padding-right: 6px;
+      }
+      .NormalComment_wrap_test {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        padding: 8px 10px;
+        line-height: 1.35;
+      }
+      .NormalComment_nickname_test {
+        color: #0369a1;
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .NormalComment_comment_test {
+        color: #111827;
+      }
+      .meta {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #d1d5db;
+        display: flex;
+        justify-content: space-between;
+      }
+      .warn {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #b45309;
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+        .CommentList_wrap_test { height: 56vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <section class="panel">
+        <h1 class="title">로컬 네이버 채팅 시뮬레이터</h1>
+        <p class="desc">
+          확장 프로그램 테스트용 페이지입니다. URL에 <code>test-naver-chat</code>가 포함되어 있어야 캡처됩니다.
+        </p>
+
+        <div class="field">
+          <label for="username">사용자명</label>
+          <input id="username" type="text" value="테스터01" />
+        </div>
+        <div class="field">
+          <label for="message">메시지</label>
+          <input id="message" type="text" placeholder="메시지를 입력하세요" />
+        </div>
+        <div class="row">
+          <button id="sendBtn" class="btn">메시지 전송</button>
+          <button id="clearBtn" class="btn secondary">채팅 비우기</button>
+        </div>
+
+        <div class="field">
+          <label for="seedCount">초기 채팅 개수(로드 시 미리 존재)</label>
+          <input id="seedCount" type="number" min="0" max="200" value="12" />
+        </div>
+        <div class="row">
+          <button id="seedBtn" class="btn secondary">초기 채팅 다시 생성</button>
+          <button id="burstBtn" class="btn secondary">버스트 20개 전송</button>
+        </div>
+
+        <div class="field">
+          <label for="intervalMs">자동 전송 간격(ms)</label>
+          <input id="intervalMs" type="number" min="100" max="10000" step="100" value="1200" />
+        </div>
+        <div class="row">
+          <button id="startAutoBtn" class="btn secondary">자동 전송 시작</button>
+          <button id="stopAutoBtn" class="btn secondary">자동 전송 중지</button>
+        </div>
+
+        <div class="chips" id="quickChips"></div>
+        <div class="warn">
+          팁: 확장 팝업의 "초기 기존 채팅 무시 시간(초)"를 테스트하려면, 페이지 새로고침 후 자동 전송을 켜서 동작을 확인하세요.
+        </div>
+      </section>
+
+      <section class="ChattingWrapper_test">
+        <div class="CommentList_wrap_test" id="chatList"></div>
+        <div class="meta">
+          <span>총 메시지: <strong id="totalCount">0</strong></span>
+          <span>자동 전송: <strong id="autoStatus">꺼짐</strong></span>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const chatList = document.getElementById("chatList");
+      const totalCount = document.getElementById("totalCount");
+      const autoStatus = document.getElementById("autoStatus");
+      const usernameInput = document.getElementById("username");
+      const messageInput = document.getElementById("message");
+      const seedCountInput = document.getElementById("seedCount");
+      const intervalMsInput = document.getElementById("intervalMs");
+      const quickChips = document.getElementById("quickChips");
+
+      let seq = 0;
+      let autoTimer = 0;
+
+      const quickMessages = [
+        "이거 재고 있어요?",
+        "오늘 가격이 얼마인가요?",
+        "배송은 얼마나 걸리나요?",
+        "색상 옵션이 뭐가 있나요?",
+        "헉 너무 예뻐요",
+        "오 대박",
+        "교환 가능할까요?",
+        "사이즈 추천 부탁드려요",
+        "ㅋㅋㅋㅋ",
+        "안녕하세요",
+      ];
+
+      function renderQuickChips() {
+        quickChips.textContent = "";
+        quickMessages.forEach((text) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "chip";
+          btn.textContent = text;
+          btn.addEventListener("click", () => appendMessage(usernameInput.value || "테스터", text));
+          quickChips.appendChild(btn);
+        });
+      }
+
+      function updateCounters() {
+        totalCount.textContent = String(seq);
+      }
+
+      function appendMessage(username, text) {
+        const row = document.createElement("div");
+        // Keep class fragments aligned with extension selectors:
+        // [class*="NormalComment_wrap"], [class*="NormalComment_nickname"], [class*="NormalComment_comment"]
+        row.className = "NormalComment_wrap_test";
+        row.setAttribute("data-message-id", "m-" + Date.now() + "-" + (++seq));
+
+        const nick = document.createElement("span");
+        nick.className = "NormalComment_nickname_test";
+        nick.textContent = username;
+
+        const msg = document.createElement("span");
+        msg.className = "NormalComment_comment_test";
+        msg.textContent = text;
+
+        row.appendChild(nick);
+        row.appendChild(msg);
+        chatList.appendChild(row);
+        chatList.scrollTop = chatList.scrollHeight;
+        updateCounters();
+      }
+
+      function randomUser() {
+        const users = ["유저A", "유저B", "고객01", "네이버닉", "구매왕", "질문봇"];
+        return users[Math.floor(Math.random() * users.length)];
+      }
+
+      function randomMessage() {
+        return quickMessages[Math.floor(Math.random() * quickMessages.length)];
+      }
+
+      function clearMessages() {
+        chatList.textContent = "";
+        seq = 0;
+        updateCounters();
+      }
+
+      function seedInitialMessages() {
+        clearMessages();
+        const count = Math.max(0, Number(seedCountInput.value) || 0);
+        for (let i = 0; i < count; i += 1) {
+          appendMessage(randomUser(), randomMessage());
+        }
+      }
+
+      function sendBurst() {
+        for (let i = 0; i < 20; i += 1) {
+          setTimeout(() => appendMessage(randomUser(), randomMessage()), i * 90);
+        }
+      }
+
+      function startAuto() {
+        stopAuto();
+        const interval = Math.max(100, Number(intervalMsInput.value) || 1200);
+        autoTimer = window.setInterval(() => {
+          appendMessage(randomUser(), randomMessage());
+        }, interval);
+        autoStatus.textContent = "켜짐";
+      }
+
+      function stopAuto() {
+        if (autoTimer) {
+          window.clearInterval(autoTimer);
+          autoTimer = 0;
+        }
+        autoStatus.textContent = "꺼짐";
+      }
+
+      document.getElementById("sendBtn").addEventListener("click", () => {
+        const text = messageInput.value.trim();
+        if (!text) return;
+        appendMessage(usernameInput.value || "테스터", text);
+        messageInput.value = "";
+        messageInput.focus();
+      });
+      document.getElementById("clearBtn").addEventListener("click", clearMessages);
+      document.getElementById("seedBtn").addEventListener("click", seedInitialMessages);
+      document.getElementById("burstBtn").addEventListener("click", sendBurst);
+      document.getElementById("startAutoBtn").addEventListener("click", startAuto);
+      document.getElementById("stopAutoBtn").addEventListener("click", stopAuto);
+      messageInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("sendBtn").click();
+      });
+
+      renderQuickChips();
+      seedInitialMessages();
+      messageInput.focus();
+    </script>
+  </body>
+</html>
